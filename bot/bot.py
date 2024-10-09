@@ -12,6 +12,13 @@ from utils.configs import TOKEN
 
 
 def create_bot_app(defaults: Optional[Defaults] = None) -> Application:
+    """
+    Создает и возвращает приложение Телеграм-бота.
+
+    Параметры:
+    - defaults: Дефолтные настройки бота. По умолчанию None.
+
+    """
     app: Application = (
         ApplicationBuilder()
         .token(TOKEN)
