@@ -22,4 +22,4 @@ class AdvertisementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Advertisement
-        fields = ['id', 'title', 'short_description', 'main_image', 'full_url']
+        fields = ['id', 'title', 'short_description', 'image', 'full_url']
