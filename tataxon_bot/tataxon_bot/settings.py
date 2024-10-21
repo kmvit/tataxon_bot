@@ -20,15 +20,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
-CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
-# worker Celery почти сразу же пытается связаться с брокером. 
-# Если брокер не запущен или есть проблемы с сетью, работник будет 
-# продолжать попытки установить связь с брокером
-# в терминале выходили предупреждения, поэтому у параметра ниже выставлен 
-# параметр True
-CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -40,6 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'api.apps.ApiConfig',
+    'bot.apps.BotConfig',
     
 ]
 
@@ -54,6 +46,18 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'tataxon_bot.urls'
+
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+
+REDIS_URL='redis://[::1]:6379/0'
+#REDIS_URL = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379')
+BROKER_URL = 'redis://[::1]:6379/0'
+CELERY_BROKER_URL = 'redis://[::1]:6379/0'
+CELERY_RESULT_BACKEND = 'redis://[::1]:6379/0'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_DEFAULT_QUEUE = 'default'
 
 TEMPLATES = [
     {
@@ -77,28 +81,17 @@ WSGI_APPLICATION = 'tataxon_bot.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-#Режим разработки
-#(если True, то база sqlite3; если False, то PostgreSQL)
-DEVELOPMENT_MODE = os.getenv('DEVELOPMENT_MODE', 'False') == 'True'
 
-if DEVELOPMENT_MODE:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'taxaton.db.sqlite3'),
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'django'),
+        'USER': os.getenv('POSTGRES_USER', 'django'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', 5432)
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('POSTGRES_DB', 'django'),
-            'USER': os.getenv('POSTGRES_USER', 'django'),
-            'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
-            'HOST': os.getenv('DB_HOST', ''),
-            'PORT': os.getenv('DB_PORT', 5432)
-        }
-    }
+}
 
 
 # Password validation
