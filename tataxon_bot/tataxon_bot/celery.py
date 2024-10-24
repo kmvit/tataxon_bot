@@ -10,9 +10,3 @@ app = Celery("tataxon_bot")
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
 app.autodiscover_tasks()
-
-
-# проверка
-@app.task
-def add(x, y):
-    return x / y

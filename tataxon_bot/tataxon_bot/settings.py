@@ -39,11 +39,15 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'tataxon_bot.urls'
 
+# Токен для Telegram бота
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 
+# Настройки Redis
 REDIS_URL='redis://[::1]:6379/0'
 #REDIS_URL = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379')
 BROKER_URL = 'redis://[::1]:6379/0'
+
+# Настройки Celery
 CELERY_BROKER_URL = 'redis://[::1]:6379/0'
 CELERY_RESULT_BACKEND = 'redis://[::1]:6379/0'
 CELERY_ACCEPT_CONTENT = ['application/json']
