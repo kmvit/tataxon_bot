@@ -1,6 +1,8 @@
 import os
+import sys
 import httpx
 import asyncio
+import logging
 from datetime import datetime
 
 import django
@@ -17,7 +19,6 @@ except django.core.exceptions.ImproperlyConfigured:
 try:
     from rss_parser import rss_parser
 except ModuleNotFoundError:
-    import sys
     # Добавляем путь к родительскому каталогу в sys.path
     sys.path.append(os.path.dirname(
         os.path.dirname(os.path.abspath(__file__)))
@@ -25,7 +26,21 @@ except ModuleNotFoundError:
     from rss_parser import rss_parser
 
 
+LOGGING_FORMAT = '%(asctime)s - %(levelname)s - %(funcName)s - %(lineno)d - %(message)s'
+
 DATE_FORMAT = '%a, %d %b %y %H:%M:%S %z'
+
+handler = logging.StreamHandler(
+    stream=sys.stdout
+)
+formatter = logging.Formatter(
+    LOGGING_FORMAT
+)
+handler.setFormatter(formatter)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(handler)
 
 
 def safe_convert_to_category(category_title: str):
@@ -35,8 +50,7 @@ def safe_convert_to_category(category_title: str):
     """
     category, _ = (Category.objects
                    .get_or_create(
-                       title=category_title
-                   ))
+                       title=category_title))
     return category
 
 
@@ -56,12 +70,12 @@ def safe_parse_datetime(date_str: str) -> datetime | None:
     try:
         return datetime.strptime(date_str, DATE_FORMAT)
     except ValueError:
-        print(f'{date_str} - не соответствует ожидаемому формату')
+        logger.error(f'{date_str} - не соответствует ожидаемому формату')
     except TypeError:
-        print(f'{date_str} - пустая строка')
+        logger.error(f'{date_str} - пустая строка')
     except AttributeError:
-        print(f'{date_str} - ошибка с временной зоной')
-    return ''
+        logger.error(f'{date_str} - ошибка с временной зоной')
+    return None
 
 
 def insert_to_db(data: list[dict[str]]) -> None:
@@ -83,11 +97,13 @@ def insert_to_db(data: list[dict[str]]) -> None:
         advertisement_item['category'] = safe_convert_to_category(
             advertisement.get('category', '')
         )
-        prepared_data.append(Advertisement(**advertisement_item))
+        # Только если дата валидная
+        if advertisement_item['pud_date'] is not None:
+            prepared_data.append(Advertisement(**advertisement_item))
     try:
         Advertisement.objects.bulk_create(prepared_data)
-    except DatabaseError:
-        print('Ошибка БД.')
+    except DatabaseError as e:
+        logger.error(f'Ошибка БД: {e}')
 
 
 if __name__ == '__main__':
