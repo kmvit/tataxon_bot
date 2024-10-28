@@ -13,6 +13,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -22,6 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'api.apps.ApiConfig',
+    'bot.apps.BotConfig',
     'drf_spectacular',
 ]
 
@@ -36,6 +38,22 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'tataxon_bot.urls'
+
+# Токен для Telegram бота
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+
+# Настройки Redis
+REDIS_URL='redis://[::1]:6379/0'
+#REDIS_URL = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379')
+BROKER_URL = 'redis://[::1]:6379/0'
+
+# Настройки Celery
+CELERY_BROKER_URL = 'redis://[::1]:6379/0'
+CELERY_RESULT_BACKEND = 'redis://[::1]:6379/0'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_DEFAULT_QUEUE = 'default'
 
 TEMPLATES = [
     {
@@ -54,6 +72,10 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'tataxon_bot.wsgi.application'
+
+
+# Database
+# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
     'default': {
