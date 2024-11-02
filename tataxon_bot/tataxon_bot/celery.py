@@ -13,8 +13,10 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
-    'parser-every-single-minute': {
+    'parser-every-three-hours': {
         'task': 'api.tasks.parser',
-        'schedule': crontab(),  # crontab(minute='*/15') каждые 15 минут
+        'schedule': crontab(minute='*/15'),
+        # crontab(minute='*/5') каждые 5 минут,
+        # crontab(minute=0, hour='*/3') каждые 3 часа
     },
 }
