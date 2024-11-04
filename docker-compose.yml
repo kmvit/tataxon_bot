@@ -13,9 +13,9 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
   
-  backend:
+  backend: &backend
     container_name: tataxon-backend
-    build: ./backend
+    build: ./tataxon_bot
     env_file: .env
     volumes:
       - static:/var/html/backend_static/
@@ -35,3 +35,35 @@ services:
       - media:/var/html/media/
     depends_on:
       - backend
+    
+  redis:
+    container_name: tataxon-redis
+    image: redis:latest
+    env_file: .env
+    environment:
+      - REDIS_PORT=6379
+    command: ["redis-server", "--port", "${REDIS_PORT}", "--appendonly", "yes","--maxmemory", "1gb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "6380:6379"
+    volumes:
+      - .:/redis.conf
+    
+  celery-worker:
+    <<: *backend
+    container_name: celery-worker
+    command: -A tataxon_bot.celery worker --loglevel=INFO --pidfile=''
+    volumes:
+    - .:/var/www/app/worker
+    depends_on:
+    - db
+    - redis
+
+  celery-beat:
+    <<: *backend
+    container_name: celery-beat
+    command: -A tataxon_bot beat --loglevel=INFO
+    volumes:
+    - .:/var/www/app/beat
+    depends_on:
+    - celery-worker
+    - redis
