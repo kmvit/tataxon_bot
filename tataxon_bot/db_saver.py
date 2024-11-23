@@ -7,6 +7,7 @@ from datetime import datetime
 
 import django
 from django.db import DatabaseError
+from django.db.models import Max
 
 try:
     from api.models import Advertisement, Category
@@ -78,6 +79,18 @@ def safe_parse_datetime(date_str: str) -> datetime | None:
     return None
 
 
+def validation_of_new_advertisement(date_of_new_ad: datetime) -> bool:
+    """
+    Сравниваются самая поздняя дата объявления из базы данных с
+    датой распарсенного объявления.
+    """
+    max_time_of_ad_in_db = Advertisement.objects.aggregate(
+        Max('pud_date')
+    )['pud_date__max']
+    if max_time_of_ad_in_db < date_of_new_ad:
+        return True
+
+
 def insert_to_db(data: list[dict[str]]) -> None:
     """
     Преобразуем распарсенные данные в подходящие для БД,
@@ -98,7 +111,8 @@ def insert_to_db(data: list[dict[str]]) -> None:
             advertisement.get('category', '')
         )
         # Только если дата валидная
-        if advertisement_item['pud_date'] is not None:
+        if (advertisement_item['pud_date'] is not None
+            and validation_of_new_advertisement(advertisement_item['pud_date'])):
             prepared_data.append(Advertisement(**advertisement_item))
     try:
         Advertisement.objects.bulk_create(prepared_data)
