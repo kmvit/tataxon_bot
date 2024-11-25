@@ -7,6 +7,7 @@ from datetime import datetime
 
 import django
 from django.db import DatabaseError
+from django.db.models import Max
 
 try:
     from api.models import Advertisement, Category
@@ -26,7 +27,9 @@ except ModuleNotFoundError:
     from rss_parser import rss_parser
 
 
-LOGGING_FORMAT = '%(asctime)s - %(levelname)s - %(funcName)s - %(lineno)d - %(message)s'
+LOGGING_FORMAT = (
+    '%(asctime)s - %(levelname)s - %(funcName)s - %(lineno)d - %(message)s'
+)
 
 DATE_FORMAT = '%a, %d %b %y %H:%M:%S %z'
 
@@ -59,12 +62,12 @@ def safe_parse_datetime(date_str: str) -> datetime | None:
     Преобразуем формат RFC 822 в datetime объект
     К примеру Mon, 23 Sep 24 22:45:20 +0500в станет:
     datetime(
-        2024, 
-        9, 
-        23, 
-        22, 
-        45, 
-        20, 
+        2024,
+        9,
+        23,
+        22,
+        45,
+        20,
         tzinfo=datetime.timezone(datetime.timedelta(seconds=18000))).
     """
     try:
@@ -76,6 +79,17 @@ def safe_parse_datetime(date_str: str) -> datetime | None:
     except AttributeError:
         logger.error(f'{date_str} - ошибка с временной зоной')
     return None
+
+
+def validation_of_new_advertisement(date_of_new_ad: datetime) -> bool:
+    """
+    Сравниваются самая поздняя дата объявления из базы данных с
+    датой распарсенного объявления.
+    """
+    max_time_of_ad_in_db = Advertisement.objects.aggregate(
+        Max('pud_date')
+    )['pud_date__max']
+    return max_time_of_ad_in_db < date_of_new_ad
 
 
 def insert_to_db(data: list[dict[str]]) -> None:
@@ -98,7 +112,10 @@ def insert_to_db(data: list[dict[str]]) -> None:
             advertisement.get('category', '')
         )
         # Только если дата валидная
-        if advertisement_item['pud_date'] is not None:
+        if (
+            advertisement_item['pud_date'] is not None
+            and validation_of_new_advertisement(advertisement_item['pud_date'])
+        ):
             prepared_data.append(Advertisement(**advertisement_item))
     try:
         Advertisement.objects.bulk_create(prepared_data)
