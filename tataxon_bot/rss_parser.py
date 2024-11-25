@@ -1,4 +1,5 @@
 import httpx
+from httpx import ConnectTimeout
 import asyncio
 from bs4 import BeautifulSoup
 
@@ -21,6 +22,10 @@ async def rss_parser(httpx_client):
         error_messages.append(
             ERROR_DOM_TREE.format(error=error, url=RSS_LINK_TAXATON)
         )
+    except ConnectTimeout as error:
+        error_messages.append(
+            f'Ошибка при подключении: {error}'
+        )
         await asyncio.sleep(15)
 
     soup = BeautifulSoup(response.text, features='xml')
@@ -38,7 +43,6 @@ async def rss_parser(httpx_client):
             pubDate=ad.find('pubDate').text,
         )
         list_of_ads.append(ad_in_base)
-
     return list_of_ads
 
 
