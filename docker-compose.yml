@@ -6,6 +6,14 @@ volumes:
 
 services:
 
+  bot:
+    build:
+      context: ./tataxon_bot
+    command: python manage.py start_bot
+    env_file: .env
+    depends_on:
+      - db
+
   db:
     container_name: tataxon-postgresql
     image: postgres:13.10
@@ -29,7 +37,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static:/var/html/static/
       - media:/var/html/media/
@@ -39,19 +47,16 @@ services:
   redis:
     container_name: tataxon-redis
     image: redis:latest
-    env_file: .env
-    environment:
-      - REDIS_PORT=6379
-    command: ["redis-server", "--port", "${REDIS_PORT}", "--appendonly", "yes","--maxmemory", "1gb", "--maxmemory-policy", "allkeys-lru"]
     ports:
-      - "6380:6379"
+      - "6379:6379"
+    command: redis-server
     volumes:
       - .:/redis.conf
     
   celery-worker:
     <<: *backend
     container_name: celery-worker
-    command: -A tataxon_bot.celery worker --loglevel=INFO --pidfile=''
+    command: celery -A tataxon_bot.celery worker --loglevel=INFO --pidfile=''
     volumes:
     - .:/var/www/app/worker
     depends_on:
@@ -61,7 +66,7 @@ services:
   celery-beat:
     <<: *backend
     container_name: celery-beat
-    command: -A tataxon_bot beat --loglevel=INFO
+    command: celery -A tataxon_bot beat --loglevel=INFO
     volumes:
     - .:/var/www/app/beat
     depends_on:

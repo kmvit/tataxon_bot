@@ -9,6 +9,8 @@ import django
 from django.db import DatabaseError
 from django.db.models import Max
 
+from typing import Optional
+
 try:
     from api.models import Advertisement, Category
 except django.core.exceptions.ImproperlyConfigured:
@@ -57,7 +59,7 @@ def safe_convert_to_category(category_title: str):
     return category
 
 
-def safe_parse_datetime(date_str: str) -> datetime | None:
+def safe_parse_datetime(date_str: str) -> Optional[datetime]:
     """
     Преобразуем формат RFC 822 в datetime объект
     К примеру Mon, 23 Sep 24 22:45:20 +0500в станет:

@@ -15,7 +15,7 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'parser-every-three-hours': {
         'task': 'api.tasks.parser',
-        'schedule': crontab(minute='*/15'),
+        'schedule': crontab(minute='*/1'),
         # crontab(minute='*/5') каждые 5 минут,
         # crontab(minute=0, hour='*/3') каждые 3 часа
     },
