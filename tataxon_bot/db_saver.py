@@ -89,6 +89,8 @@ def validation_of_new_advertisement(date_of_new_ad: datetime) -> bool:
     max_time_of_ad_in_db = Advertisement.objects.aggregate(
         Max('pud_date')
     )['pud_date__max']
+    if Advertisement.objects.count() == 0:
+        return True
     return max_time_of_ad_in_db < date_of_new_ad
 
 
