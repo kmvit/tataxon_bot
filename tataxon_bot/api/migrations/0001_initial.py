@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
                 ('short_description', models.TextField(verbose_name='Краткое описание')),
                 ('image', models.ImageField(blank=True, null=True, upload_to='advert_images/', verbose_name='Основное изображение')),
                 ('full_url', models.URLField(max_length=500, verbose_name='Ссылка на полное объявление')),
-                ('pud_date', models.DateTimeField(verbose_name='Дата создания объявления')),
+                ('pub_date', models.DateTimeField(verbose_name='Дата создания объявления')),
                 ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='api.category', verbose_name='Категория объявления')),
             ],
         ),

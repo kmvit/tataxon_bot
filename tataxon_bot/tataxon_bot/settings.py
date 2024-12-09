@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'api.apps.ApiConfig',
     'bot.apps.BotConfig',
     'drf_spectacular',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -40,9 +41,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'tataxon_bot.urls'
 
-# Токен для Telegram бота
-# TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-
 # Настройки Redis
 # REDIS_URL='redis://[::1]:6379/0'
 REDIS_URL = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379')
@@ -56,6 +54,16 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_DEFAULT_QUEUE = 'default'
+
+# Celery Beat
+CELERY_BEAT_SCHEDULE = {
+    'send-new-ads-every-1-minute': {
+        'task': 'api.tasks.parse_and_send_ads',
+        'schedule': 60.0,  # каждую 1 минуту
+    },
+}
+
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 TEMPLATES = [
     {
@@ -75,23 +83,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'tataxon_bot.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_DB', 'postgres'),
-        'USER': os.environ.get('POSTGRES_USER', 'postgres'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'postgres'),
-        'HOST': os.environ.get('DB_HOST', 'db'),
-        'PORT': os.environ.get('DB_PORT', 5432)
-    },
+        'NAME': os.getenv('POSTGRES_DB', 'postgres'),
+        'USER': os.getenv('POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'postgres'),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', 5432)
+    }
 }
 
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
+# Логирование для проверки
+print(repr(os.getenv('POSTGRES_DB')))
+print(repr(os.getenv('POSTGRES_USER')))
+print(repr(os.getenv('POSTGRES_PASSWORD')))
+print(repr(os.getenv('DB_HOST')))
+print(repr(os.getenv('DB_PORT')))
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -110,7 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'ru-RU'
 
-TIME_ZONE = 'Europe/Moscow'
+TIME_ZONE = 'UTC'
 
 USE_I18N = True
 

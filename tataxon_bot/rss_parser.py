@@ -1,7 +1,8 @@
-import httpx
-from httpx import ConnectTimeout
 import asyncio
+
+import httpx
 from bs4 import BeautifulSoup
+from httpx import ConnectTimeout
 
 ERROR_DOM_TREE = (
     'Ошибка {error} при представлении XML-кода RSS-ленты {url} '
