@@ -92,7 +92,7 @@ def validation_of_new_advertisement(date_of_new_ad: datetime) -> bool:
     # что дата нового объявления всегда валидна
     if max_time_of_ad_in_db is None:
         return True
-
+      
     return max_time_of_ad_in_db < date_of_new_ad
 
 
