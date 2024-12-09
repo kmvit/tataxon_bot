@@ -49,7 +49,7 @@ class Advertisement(models.Model):
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE,
         verbose_name='Категория объявления')
-    pud_date = models.DateTimeField(verbose_name='Дата создания объявления')
+    pub_date = models.DateTimeField(verbose_name='Дата создания объявления')
 
     def __str__(self):
         """

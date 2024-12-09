@@ -17,7 +17,10 @@ services:
   db:
     container_name: tataxon-postgresql
     image: postgres:13.10
-    env_file: .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - pg_data:/var/lib/postgresql/data
   

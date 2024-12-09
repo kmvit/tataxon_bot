@@ -1,8 +1,9 @@
 import tempfile
 
 import pytest
-from api.models import Advertisement
 from django.utils import timezone
+
+from api.models import Advertisement
 
 
 @pytest.mark.django_db

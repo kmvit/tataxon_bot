@@ -1,8 +1,9 @@
 import tempfile
 
 import pytest
-from api.models import Advertisement, Category
 from django.utils import timezone
+
+from api.models import Advertisement, Category
 
 
 @pytest.fixture

@@ -1,15 +1,14 @@
-import os
-import sys
-import httpx
 import asyncio
 import logging
-from datetime import datetime
+import os
+import sys
+from datetime import datetime, timezone
+from typing import Optional
 
 import django
+import httpx
 from django.db import DatabaseError
 from django.db.models import Max
-
-from typing import Optional
 
 try:
     from api.models import Advertisement, Category
@@ -73,13 +72,12 @@ def safe_parse_datetime(date_str: str) -> Optional[datetime]:
         tzinfo=datetime.timezone(datetime.timedelta(seconds=18000))).
     """
     try:
-        return datetime.strptime(date_str, DATE_FORMAT)
+        parsed_date = datetime.strptime(date_str, "%a, %d %b %y %H:%M:%S %z")
+        return parsed_date.astimezone(timezone.utc)  # Преобразуем в UTC
     except ValueError:
-        logger.error(f'{date_str} - не соответствует ожидаемому формату')
+        logger.error(f"'{date_str}' - не соответствует ожидаемому формату")
     except TypeError:
-        logger.error(f'{date_str} - пустая строка')
-    except AttributeError:
-        logger.error(f'{date_str} - ошибка с временной зоной')
+        logger.error(f"'{date_str}' - пустая строка")
     return None
 
 
@@ -89,40 +87,42 @@ def validation_of_new_advertisement(date_of_new_ad: datetime) -> bool:
     датой распарсенного объявления.
     """
     max_time_of_ad_in_db = Advertisement.objects.aggregate(
-        Max('pud_date')
-    )['pud_date__max']
+        Max('pub_date'))['pub_date__max']
+    # Если в базе данных нет записей, считаем,
+    # что дата нового объявления всегда валидна
+    if max_time_of_ad_in_db is None:
+        return True
+
     return max_time_of_ad_in_db < date_of_new_ad
 
 
-def insert_to_db(data: list[dict[str]]) -> None:
+def insert_to_db(data: list[dict[str]]) -> list[dict[str]]:
     """
     Преобразуем распарсенные данные в подходящие для БД,
     и делаем INSERT.
     """
     prepared_data = []
+    new_ads = []
     for advertisement in data:
-        advertisement_item = {}
-        advertisement_item['title'] = advertisement.get('title', '')
-        advertisement_item['short_description'] = advertisement.get(
-            'description', ''
-        )
-        advertisement_item['full_url'] = advertisement.get('link', '')
-        advertisement_item['pud_date'] = safe_parse_datetime(
-            advertisement.get('pubDate', '')
-        )
-        advertisement_item['category'] = safe_convert_to_category(
-            advertisement.get('category', '')
-        )
-        # Только если дата валидная
+        advertisement_item = {
+            'title': advertisement.get('title', ''),
+            'short_description': advertisement.get('description', ''),
+            'full_url': advertisement.get('link', ''),
+            'pub_date': safe_parse_datetime(advertisement.get('pubDate', '')),
+            'category': safe_convert_to_category(
+                advertisement.get('category', ''))
+        }
         if (
-            advertisement_item['pud_date'] is not None
-            and validation_of_new_advertisement(advertisement_item['pud_date'])
+            advertisement_item['pub_date'] is not None
+            and validation_of_new_advertisement(advertisement_item['pub_date'])
         ):
             prepared_data.append(Advertisement(**advertisement_item))
+            new_ads.append(advertisement_item)
     try:
         Advertisement.objects.bulk_create(prepared_data)
     except DatabaseError as e:
         logger.error(f'Ошибка БД: {e}')
+    return new_ads
 
 
 if __name__ == '__main__':
